@@ -510,5 +510,9 @@ class WebRenderer {
     }
 }
 
-// Create global instance
-window.renderer = new WebRenderer();
+export { WebRenderer };
+
+// Create global instance (skip in test environment)
+if (!import.meta.env?.VITEST) {
+    window.renderer = new WebRenderer();
+}
