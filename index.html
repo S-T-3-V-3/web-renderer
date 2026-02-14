@@ -324,7 +324,7 @@
             color: hsl(var(--foreground));
             padding: 8px 12px;
             border-radius: var(--radius);
-            font-family: 'Inter', monospace;
+            font-family: 'Inter', sans-serif;
             font-size: 13px;
             font-weight: 600;
             z-index: 10;
@@ -372,7 +372,7 @@
                 <h2>Load Model</h2>
                 <div class="control-group">
                     <label>3D Model File</label>
-                    <input type="file" id="modelUpload" accept=".glb,.gltf,.fbx,.obj" onchange="renderer.handleFileUpload(event)" placeholder="GLB, GLTF, FBX, or OBJ">
+                    <input type="file" id="modelUpload" accept=".glb,.gltf,.fbx,.obj" onchange="renderer.handleFileUpload(event)">
                 </div>
                 <div class="control-group">
                     <label>Material File (OBJ)</label>
