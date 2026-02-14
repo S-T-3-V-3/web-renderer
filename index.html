@@ -1041,17 +1041,19 @@
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
             
+            // Handle F11 separately before the switch
+            if (e.key === 'F11') {
+                e.preventDefault();
+                renderer.frameCameraOnObject();
+                return;
+            }
+            
             switch(e.key.toLowerCase()) {
                 case 'w':
                     renderer.toggleWireframe();
                     break;
                 case 'f':
-                    if (e.key === 'F11') {
-                        e.preventDefault();
-                        renderer.frameCameraOnObject();
-                    } else {
-                        renderer.resetCamera();
-                    }
+                    renderer.resetCamera();
                     break;
                 case 'n':
                     if (e.ctrlKey || e.metaKey) {
