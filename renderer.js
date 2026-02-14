@@ -97,6 +97,9 @@ class WebRenderer {
             this.scene.remove(this.currentObject);
         }
 
+        // Update hierarchy
+        this.updateHierarchy(shapeType.charAt(0).toUpperCase() + shapeType.slice(1));
+
         let geometry;
         switch (shapeType) {
             case 'cube':
@@ -418,6 +421,9 @@ class WebRenderer {
                     this.fitObjectToScene(this.currentObject);
                     this.scene.add(this.currentObject);
 
+                    // Update hierarchy
+                    this.updateHierarchy(file.name.split('.')[0]);
+
                     // Enable shadows
                     this.currentObject.traverse((child) => {
                         if (child.isMesh) {
@@ -496,6 +502,9 @@ class WebRenderer {
                 this.fitObjectToScene(this.currentObject);
                 this.scene.add(this.currentObject);
 
+                // Update hierarchy
+                this.updateHierarchy(file.name.split('.')[0]);
+
                 // Enable shadows and convert materials to PBR
                 this.currentObject.traverse((child) => {
                     if (child.isMesh) {
@@ -565,6 +574,9 @@ class WebRenderer {
                 // Center and scale the model
                 this.fitObjectToScene(this.currentObject);
                 this.scene.add(this.currentObject);
+
+                // Update hierarchy
+                this.updateHierarchy(file.name.split('.')[0]);
                 
                 // Enable shadows for all meshes in the model
                 this.currentObject.traverse((child) => {
@@ -779,6 +791,16 @@ class WebRenderer {
             document.getElementById('fps-counter').textContent = `FPS: ${fps}`;
             this.frameCount = 0;
             this.lastTime = currentTime;
+        }
+    }
+
+    updateHierarchy(objectName) {
+        const item = document.getElementById('current-object-item');
+        if (item) {
+            const nameSpan = item.querySelector('span:last-child');
+            if (nameSpan) {
+                nameSpan.textContent = objectName;
+            }
         }
     }
 
