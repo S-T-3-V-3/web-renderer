@@ -793,7 +793,7 @@
                     <div class="accordion-content">
                         <div class="card">
                             <div class="control-group">
-                                <label>Base Color</label>
+                                <label>Object Color</label>
                                 <input type="color" id="objectColor" value="#4a90e2" onchange="renderer.updateObjectColor(this.value)">
                             </div>
                             <div class="control-group">
@@ -1041,8 +1041,8 @@
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
             
-            // Handle F11 separately before the switch because it needs to be distinguished from 'f'
-            // F11.toLowerCase() would be 'f11', not matching 'f', so we handle it explicitly first
+            // Handle F11 separately before the switch because e.key returns 'F11' as a string
+            // which doesn't match the lowercase 'f' case in the switch statement below
             if (e.key === 'F11') {
                 e.preventDefault();
                 renderer.frameCameraOnObject();
