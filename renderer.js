@@ -20,6 +20,7 @@ class WebRenderer {
         this.objLoader = new OBJLoader();
         this.mtlLoader = new MTLLoader();
         this.textureFiles = new Map(); // Store uploaded texture files
+        this.individualTextures = new Map(); // Store per-type texture assignments
         this.mtlFile = null; // Store uploaded MTL file
         
         // FPS counter
@@ -79,7 +80,7 @@ class WebRenderer {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
-        this.controls.screenSpacePanning = false;
+        this.controls.screenSpacePanning = true;
         this.controls.minDistance = 0.01;
         this.controls.maxDistance = 10000;
 
@@ -199,6 +200,64 @@ class WebRenderer {
         console.log(`Loaded MTL file: ${file.name}. Upload an OBJ model to apply.`);
     }
 
+    handleIndividualTexture(mapType, event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        this.individualTextures.set(mapType, { url, file });
+        console.log(`Assigned ${file.name} as ${mapType}`);
+
+        if (this.currentObject) {
+            this.applySingleTexture(mapType, { url, file });
+        }
+    }
+
+    applySingleTexture(mapType, entry) {
+        if (!this.currentObject) return;
+
+        const textureLoader = new THREE.TextureLoader();
+        const srgbMaps = ['map', 'emissiveMap'];
+
+        this.currentObject.traverse((child) => {
+            if (child.isMesh) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach((mat) => {
+                    // Ensure we have a PBR material
+                    if (!(mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial)) {
+                        const newMat = new THREE.MeshStandardMaterial();
+                        if (mat.color) newMat.color.copy(mat.color);
+                        if (mat.map) newMat.map = mat.map;
+                        child.material = newMat;
+                        mat = newMat;
+                    }
+
+                    const tex = textureLoader.load(entry.url);
+                    tex.colorSpace = srgbMaps.includes(mapType)
+                        ? THREE.SRGBColorSpace
+                        : THREE.LinearSRGBColorSpace;
+                    mat[mapType] = tex;
+
+                    if (mapType === 'emissiveMap' && mat.emissive) {
+                        mat.emissive.set(0xffffff);
+                        mat.emissiveIntensity = mat.emissiveIntensity || 1;
+                    }
+                    if (mapType === 'alphaMap') {
+                        mat.transparent = true;
+                    }
+                    if (mapType === 'metalnessMap') {
+                        mat.metalness = 1.0;
+                    }
+                    if (mapType === 'roughnessMap') {
+                        mat.roughness = 1.0;
+                    }
+
+                    mat.needsUpdate = true;
+                });
+            }
+        });
+    }
+
     handleTextureUpload(event) {
         const files = event.target.files;
         if (!files || files.length === 0) return;
@@ -273,8 +332,22 @@ class WebRenderer {
 
         this.currentObject.traverse((child) => {
             if (child.isMesh) {
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                materials.forEach((mat) => {
+                let materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach((mat, idx) => {
+                    // Convert non-PBR materials (e.g. MeshPhongMaterial from FBX) to MeshStandardMaterial
+                    if (!(mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial)) {
+                        const newMat = new THREE.MeshStandardMaterial();
+                        if (mat.color) newMat.color.copy(mat.color);
+                        newMat.roughness = 0.8;
+                        newMat.metalness = 0.0;
+                        if (Array.isArray(child.material)) {
+                            child.material[idx] = newMat;
+                        } else {
+                            child.material = newMat;
+                        }
+                        mat = newMat;
+                    }
+
                     // First, try to replace existing texture maps by matching their source filenames
                     const mapProps = ['map', 'normalMap', 'bumpMap', 'emissiveMap', 'roughnessMap',
                                      'metalnessMap', 'aoMap', 'specularMap', 'displacementMap', 'alphaMap'];
@@ -284,7 +357,6 @@ class WebRenderer {
                             const entry = this.textureFiles.get(texName);
                             if (entry) {
                                 const tex = textureLoader.load(entry.url);
-                                // Only diffuse/emissive maps use SRGB; others are linear data
                                 if (prop === 'map' || prop === 'emissiveMap') {
                                     tex.colorSpace = THREE.SRGBColorSpace;
                                 } else {
@@ -295,21 +367,31 @@ class WebRenderer {
                         }
                     }
 
-                    // Then apply pattern-matched textures for any maps not already set
+                    // Apply pattern-matched textures — always overwrite
+                    // FBX/OBJ models may have broken texture references that need replacing
                     for (const [prop, entry] of assignments) {
-                        if (!mat[prop]) {
-                            const tex = textureLoader.load(entry.url);
-                            if (prop === 'map' || prop === 'emissiveMap') {
-                                tex.colorSpace = THREE.SRGBColorSpace;
-                            } else {
-                                tex.colorSpace = THREE.LinearSRGBColorSpace;
-                            }
-                            mat[prop] = tex;
+                        const tex = textureLoader.load(entry.url);
+                        if (prop === 'map' || prop === 'emissiveMap') {
+                            tex.colorSpace = THREE.SRGBColorSpace;
+                        } else {
+                            tex.colorSpace = THREE.LinearSRGBColorSpace;
+                        }
+                        mat[prop] = tex;
 
-                            // Enable emissive color if emissive map is assigned
-                            if (prop === 'emissiveMap' && mat.emissive) {
-                                mat.emissive.set(0xffffff);
-                            }
+                        if (prop === 'emissiveMap' && mat.emissive) {
+                            mat.emissive.set(0xffffff);
+                            mat.emissiveIntensity = mat.emissiveIntensity || 1;
+                        }
+                        if (prop === 'alphaMap') {
+                            mat.transparent = true;
+                        }
+                        // When assigning metalness/roughness maps, set scalar to 1.0
+                        // so the map fully controls the value
+                        if (prop === 'metalnessMap') {
+                            mat.metalness = 1.0;
+                        }
+                        if (prop === 'roughnessMap') {
+                            mat.roughness = 1.0;
                         }
                     }
 
@@ -423,17 +505,45 @@ class WebRenderer {
                 // Update hierarchy
                 this.updateHierarchy(file.name.split('.')[0]);
 
-                // Enable shadows and fix materials
+                // Enable shadows and convert materials to PBR
                 this.currentObject.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
 
-                        // Fix colorSpace on all texture maps
+                        // FBX models use MeshPhongMaterial - convert to MeshStandardMaterial for PBR
                         const materials = Array.isArray(child.material) ? child.material : [child.material];
-                        materials.forEach((mat) => {
-                            this.fixMaterialTextures(mat);
+                        const newMaterials = materials.map((mat) => {
+                            if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+                                this.fixMaterialTextures(mat);
+                                return mat;
+                            }
+                            // Convert Phong/Lambert/Basic to Standard
+                            const stdMat = new THREE.MeshStandardMaterial();
+                            if (mat.color) stdMat.color.copy(mat.color);
+                            if (mat.map) {
+                                stdMat.map = mat.map;
+                                stdMat.map.colorSpace = THREE.SRGBColorSpace;
+                            }
+                            if (mat.normalMap) {
+                                stdMat.normalMap = mat.normalMap;
+                                stdMat.normalMap.colorSpace = THREE.LinearSRGBColorSpace;
+                            }
+                            if (mat.emissiveMap) {
+                                stdMat.emissiveMap = mat.emissiveMap;
+                                stdMat.emissive = mat.emissive || new THREE.Color(0xffffff);
+                            }
+                            if (mat.aoMap) stdMat.aoMap = mat.aoMap;
+                            if (mat.alphaMap) {
+                                stdMat.alphaMap = mat.alphaMap;
+                                stdMat.transparent = true;
+                            }
+                            stdMat.roughness = 0.8;
+                            stdMat.metalness = 0.0;
+                            stdMat.needsUpdate = true;
+                            return stdMat;
                         });
+                        child.material = newMaterials.length === 1 ? newMaterials[0] : newMaterials;
                     }
                 });
 
@@ -692,46 +802,6 @@ class WebRenderer {
                 nameSpan.textContent = objectName;
             }
         }
-    }
-
-    handleIndividualTexture(mapType, event) {
-        const file = event.target.files[0];
-        if (!file || !this.currentObject) return;
-
-        const url = URL.createObjectURL(file);
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load(url);
-
-        // Set color space based on map type
-        if (mapType === 'map' || mapType === 'emissiveMap') {
-            texture.colorSpace = THREE.SRGBColorSpace;
-        } else {
-            texture.colorSpace = THREE.LinearSRGBColorSpace;
-        }
-
-        // Apply texture to all materials
-        this.currentObject.traverse((child) => {
-            if (child.isMesh) {
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                materials.forEach((mat) => {
-                    mat[mapType] = texture;
-                    
-                    // Enable emissive color if emissive map is assigned
-                    if (mapType === 'emissiveMap' && mat.emissive) {
-                        mat.emissive.set(0xffffff);
-                    }
-                    
-                    // Enable transparency if alpha map is assigned
-                    if (mapType === 'alphaMap') {
-                        mat.transparent = true;
-                    }
-                    
-                    mat.needsUpdate = true;
-                });
-            }
-        });
-
-        console.log(`Applied ${mapType} texture: ${file.name}`);
     }
 
     animate() {
