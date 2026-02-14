@@ -15,6 +15,8 @@ class WebRenderer {
         this.ambientLight = null;
         this.directionalLight = null;
         this.isRotating = false;
+        this.keysPressed = new Set();
+        this.moveSpeed = 0.05;
         this.gltfLoader = new GLTFLoader();
         this.fbxLoader = new FBXLoader();
         this.objLoader = new OBJLoader();
@@ -83,6 +85,14 @@ class WebRenderer {
         this.controls.screenSpacePanning = true;
         this.controls.minDistance = 0.01;
         this.controls.maxDistance = 10000;
+
+        // WASD movement
+        window.addEventListener('keydown', (e) => {
+            this.keysPressed.add(e.key.toLowerCase());
+        });
+        window.addEventListener('keyup', (e) => {
+            this.keysPressed.delete(e.key.toLowerCase());
+        });
 
         // Load default shape
         this.loadShape('cube');
@@ -784,6 +794,32 @@ class WebRenderer {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+
+        // WASD movement
+        if (this.keysPressed.size > 0) {
+            const forward = new THREE.Vector3();
+            this.camera.getWorldDirection(forward);
+            const right = new THREE.Vector3();
+            right.crossVectors(forward, this.camera.up).normalize();
+
+            const delta = new THREE.Vector3();
+
+            if (this.keysPressed.has('w')) delta.add(forward);
+            if (this.keysPressed.has('s')) delta.sub(forward);
+            if (this.keysPressed.has('a')) delta.sub(right);
+            if (this.keysPressed.has('d')) delta.add(right);
+            if (this.keysPressed.has('q') || this.keysPressed.has(' ')) delta.y += 1;
+            if (this.keysPressed.has('e') || this.keysPressed.has('shift')) delta.y -= 1;
+
+            if (delta.lengthSq() > 0) {
+                // Scale speed by distance to target for natural feel at any zoom
+                const dist = this.camera.position.distanceTo(this.controls.target);
+                const speed = this.moveSpeed * Math.max(dist * 0.1, 0.01);
+                delta.normalize().multiplyScalar(speed);
+                this.camera.position.add(delta);
+                this.controls.target.add(delta);
+            }
+        }
 
         // Rotate object if enabled
         if (this.currentObject && this.isRotating) {
