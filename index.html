@@ -9,26 +9,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --background: 0 0% 100%;
-            --foreground: 240 10% 3.9%;
-            --card: 0 0% 100%;
-            --card-foreground: 240 10% 3.9%;
-            --popover: 0 0% 100%;
-            --popover-foreground: 240 10% 3.9%;
-            --primary: 240 5.9% 10%;
+            /* Unreal Editor inspired dark theme */
+            --background: 220 13% 13%;
+            --foreground: 210 20% 90%;
+            --card: 220 13% 16%;
+            --card-foreground: 210 20% 90%;
+            --popover: 220 13% 16%;
+            --popover-foreground: 210 20% 90%;
+            --primary: 217 91% 60%;
             --primary-foreground: 0 0% 98%;
-            --secondary: 240 4.8% 95.9%;
-            --secondary-foreground: 240 5.9% 10%;
-            --muted: 240 4.8% 95.9%;
-            --muted-foreground: 240 3.8% 46.1%;
-            --accent: 240 4.8% 95.9%;
-            --accent-foreground: 240 5.9% 10%;
+            --secondary: 220 13% 20%;
+            --secondary-foreground: 210 20% 90%;
+            --muted: 220 13% 20%;
+            --muted-foreground: 215 15% 60%;
+            --accent: 220 13% 22%;
+            --accent-foreground: 210 20% 90%;
             --destructive: 0 84.2% 60.2%;
             --destructive-foreground: 0 0% 98%;
-            --border: 240 5.9% 90%;
-            --input: 240 5.9% 90%;
-            --ring: 240 5.9% 10%;
-            --radius: 0.5rem;
+            --border: 220 13% 25%;
+            --input: 220 13% 20%;
+            --ring: 217 91% 60%;
+            --radius: 0.25rem;
         }
 
         * {
@@ -51,13 +52,13 @@
             display: flex;
             width: 100vw;
             height: 100vh;
-            background: hsl(240 5% 96%);
+            background: hsl(220 13% 11%);
         }
 
         #canvas-container {
             flex: 1;
             position: relative;
-            background: hsl(240 5% 98%);
+            background: hsl(220 13% 13%);
         }
 
         #renderCanvas {
@@ -85,12 +86,12 @@
         }
 
         #control-panel::-webkit-scrollbar-thumb {
-            background: hsl(var(--border));
+            background: hsl(var(--muted));
             border-radius: 4px;
         }
 
         #control-panel::-webkit-scrollbar-thumb:hover {
-            background: hsl(var(--muted-foreground));
+            background: hsl(var(--accent));
         }
 
         h1 {
@@ -125,12 +126,12 @@
             border-radius: var(--radius);
             padding: 16px;
             margin-bottom: 16px;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
             transition: box-shadow 0.2s ease;
         }
 
         .card:hover {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.5);
         }
 
         .card h2 {
@@ -159,7 +160,7 @@
             padding: 10px 16px;
             border: 1px solid hsl(var(--border));
             border-radius: var(--radius);
-            background: hsl(var(--background));
+            background: hsl(var(--secondary));
             color: hsl(var(--foreground));
             cursor: pointer;
             font-size: 14px;
@@ -175,7 +176,7 @@
 
         button:hover {
             background: hsl(var(--accent));
-            border-color: hsl(var(--ring));
+            border-color: hsl(var(--primary));
         }
 
         button:active {
@@ -194,8 +195,8 @@
         }
 
         .button-primary:hover {
-            background: hsl(240 5.9% 20%);
-            border-color: hsl(240 5.9% 20%);
+            background: hsl(217 91% 55%);
+            border-color: hsl(217 91% 55%);
         }
 
         .button-full {
@@ -218,10 +219,10 @@
             width: 18px;
             height: 18px;
             background: hsl(var(--primary));
-            border: 2px solid hsl(var(--background));
+            border: 2px solid hsl(var(--card));
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
             transition: all 0.15s ease;
         }
 
@@ -233,10 +234,10 @@
             width: 18px;
             height: 18px;
             background: hsl(var(--primary));
-            border: 2px solid hsl(var(--background));
+            border: 2px solid hsl(var(--card));
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
             transition: all 0.15s ease;
         }
 
@@ -258,7 +259,7 @@
             padding: 12px;
             border: 2px dashed hsl(var(--border));
             border-radius: var(--radius);
-            background: hsl(var(--background));
+            background: hsl(var(--secondary));
             cursor: pointer;
             font-size: 13px;
             font-family: inherit;
@@ -267,7 +268,7 @@
         }
 
         input[type="file"]:hover {
-            border-color: hsl(var(--ring));
+            border-color: hsl(var(--primary));
             background: hsl(var(--accent));
         }
 
@@ -334,7 +335,7 @@
             font-size: 13px;
             font-weight: 600;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
             font-variant-numeric: tabular-nums;
         }
 
@@ -349,149 +350,729 @@
             height: 16px;
             display: inline-block;
         }
+
+        /* Menu Bar Styles */
+        #menu-bar {
+            background: hsl(220 13% 10%);
+            color: hsl(0 0% 98%);
+            display: flex;
+            height: 32px;
+            align-items: center;
+            padding: 0 8px;
+            border-bottom: 1px solid hsl(220 13% 18%);
+            position: relative;
+            z-index: 100;
+        }
+
+        .menu-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.15s ease;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: hsl(220 13% 18%);
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: hsl(220 13% 12%);
+            border: 1px solid hsl(220 13% 22%);
+            border-radius: 6px;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            margin-top: 4px;
+            z-index: 1000;
+        }
+
+        .menu-item.active .menu-dropdown {
+            display: block;
+        }
+
+        .menu-dropdown-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.15s ease;
+        }
+
+        .menu-dropdown-item:hover {
+            background: hsl(220 13% 18%);
+        }
+
+        .menu-dropdown-item:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+
+        .menu-dropdown-item:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .menu-shortcut {
+            font-size: 11px;
+            color: hsl(240 5% 65%);
+            margin-left: 24px;
+        }
+
+        .menu-separator {
+            height: 1px;
+            background: hsl(220 13% 22%);
+            margin: 4px 0;
+        }
+
+        /* Toolbar Styles */
+        #toolbar {
+            background: hsl(220 13% 14%);
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            gap: 4px;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .toolbar-button {
+            padding: 6px 10px;
+            border: 1px solid hsl(var(--border));
+            border-radius: 4px;
+            background: hsl(var(--secondary));
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: hsl(var(--foreground));
+        }
+
+        .toolbar-button:hover {
+            background: hsl(var(--accent));
+            border-color: hsl(var(--primary));
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background: hsl(var(--border));
+            margin: 0 4px;
+        }
+
+        /* Layout Updates */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #left-panel {
+            width: 250px;
+            background: hsl(var(--card));
+            border-right: 1px solid hsl(var(--border));
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #left-panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid hsl(var(--border));
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: hsl(var(--muted-foreground));
+            letter-spacing: 0.05em;
+        }
+
+        #scene-hierarchy {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .hierarchy-item {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s ease;
+            margin-bottom: 2px;
+        }
+
+        .hierarchy-item:hover {
+            background: hsl(var(--accent));
+        }
+
+        .hierarchy-item.selected {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .hierarchy-icon {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        /* Accordion Styles */
+        .accordion {
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .accordion-header {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 13px;
+            background: hsl(var(--card));
+            transition: background 0.15s ease;
+            user-select: none;
+        }
+
+        .accordion-header:hover {
+            background: hsl(var(--accent));
+        }
+
+        .accordion-icon {
+            transition: transform 0.2s ease;
+            font-size: 10px;
+        }
+
+        .accordion.collapsed .accordion-icon {
+            transform: rotate(-90deg);
+        }
+
+        .accordion-content {
+            padding: 16px;
+            background: hsl(var(--card));
+        }
+
+        .accordion.collapsed .accordion-content {
+            display: none;
+        }
+
+        /* Update container layout */
+        #container {
+            display: flex;
+            flex: 1;
+            background: hsl(240 5% 96%);
+        }
+
+        /* Update control panel */
+        #control-panel {
+            width: 320px;
+            background: hsl(var(--card));
+            overflow-y: auto;
+            border-left: 1px solid hsl(var(--border));
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
+        }
+
+        #control-panel h1,
+        #control-panel .subtitle {
+            padding: 0 16px;
+        }
+
+        #control-panel h1 {
+            padding-top: 16px;
+        }
+
+        /* Remove card margins in accordions */
+        .accordion-content .card {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+
+        .accordion-content .card:hover {
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="canvas-container">
-            <canvas id="renderCanvas"></canvas>
-            <div id="fps-counter">FPS: 60</div>
+    <div id="app-container">
+        <!-- Menu Bar -->
+        <div id="menu-bar">
+            <div class="menu-item" onclick="toggleMenu(this)">
+                File
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('new')">
+                        New Scene<span class="menu-shortcut">Ctrl+N</span>
+                    </div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('open')">
+                        Open Model<span class="menu-shortcut">Ctrl+O</span>
+                    </div>
+                    <div class="menu-separator"></div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('export')">
+                        Export Scene<span class="menu-shortcut">Ctrl+E</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item" onclick="toggleMenu(this)">
+                Edit
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('undo')">
+                        Undo<span class="menu-shortcut">Ctrl+Z</span>
+                    </div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('redo')">
+                        Redo<span class="menu-shortcut">Ctrl+Y</span>
+                    </div>
+                    <div class="menu-separator"></div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('preferences')">
+                        Preferences
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item" onclick="toggleMenu(this)">
+                View
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); renderer.resetCamera()">
+                        Reset Camera<span class="menu-shortcut">F</span>
+                    </div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); renderer.frameCameraOnObject()">
+                        Focus Model<span class="menu-shortcut">F11</span>
+                    </div>
+                    <div class="menu-separator"></div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); renderer.toggleWireframe()">
+                        Toggle Wireframe<span class="menu-shortcut">W</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item" onclick="toggleMenu(this)">
+                Tools
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('materialEditor')">
+                        Material Editor
+                    </div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('textureManager')">
+                        Texture Manager
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item" onclick="toggleMenu(this)">
+                Help
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('docs')">
+                        Documentation
+                    </div>
+                    <div class="menu-dropdown-item" onclick="event.stopPropagation(); menuAction('about')">
+                        About
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div id="control-panel">
-            <h1>3D Renderer</h1>
-            <p class="subtitle">Interactive 3D model viewer and editor</p>
-            
-            <div class="card">
-                <h2>3D Objects</h2>
-                <div class="button-grid">
-                    <button onclick="renderer.loadShape('cube')">Cube</button>
-                    <button onclick="renderer.loadShape('sphere')">Sphere</button>
-                    <button onclick="renderer.loadShape('torus')">Torus</button>
-                    <button onclick="renderer.loadShape('cone')">Cone</button>
-                    <button onclick="renderer.loadShape('cylinder')">Cylinder</button>
-                    <button onclick="renderer.loadShape('teapot')">Teapot</button>
-                </div>
-            </div>
 
-            <div class="card">
-                <h2>Load Model</h2>
-                <div class="control-group">
-                    <label>3D Model File</label>
-                    <input type="file" id="modelUpload" accept=".glb,.gltf,.fbx,.obj" onchange="renderer.handleFileUpload(event)">
-                </div>
-                <div class="control-group">
-                    <label>Material File (OBJ)</label>
-                    <input type="file" id="mtlUpload" accept=".mtl" onchange="renderer.handleMTLUpload(event)">
-                </div>
-                <div class="control-group">
-                    <label>Bulk Textures (auto-detect by name)</label>
-                    <input type="file" id="textureUpload" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" multiple onchange="renderer.handleTextureUpload(event)">
-                </div>
-            </div>
+        <!-- Toolbar -->
+        <div id="toolbar">
+            <button class="toolbar-button" onclick="menuAction('new')" title="New Scene">
+                ➕ New
+            </button>
+            <button class="toolbar-button" onclick="menuAction('open')" title="Open Model">
+                📁 Open
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-button" onclick="renderer.resetCamera()" title="Reset Camera">
+                🎥 Reset
+            </button>
+            <button class="toolbar-button" onclick="renderer.frameCameraOnObject()" title="Focus">
+                🎯 Focus
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-button" onclick="renderer.toggleRotation()" title="Toggle Rotation">
+                🔄 Rotate
+            </button>
+            <button class="toolbar-button" onclick="renderer.toggleWireframe()" title="Toggle Wireframe">
+                🔲 Wire
+            </button>
+        </div>
 
-            <div class="card">
-                <h2>Textures</h2>
-                <div class="control-group">
-                    <label>Diffuse / Albedo</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('map', event)">
-                </div>
-                <div class="control-group">
-                    <label>Normal Map</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('normalMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Bump Map</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('bumpMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Emissive</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('emissiveMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Roughness</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('roughnessMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Metalness</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('metalnessMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Ambient Occlusion</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('aoMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Specular</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('specularMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Displacement</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('displacementMap', event)">
-                </div>
-                <div class="control-group">
-                    <label>Alpha / Opacity</label>
-                    <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('alphaMap', event)">
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Lighting</h2>
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <label>Ambient Light</label>
-                        <span class="range-value" id="ambientValue">0.5</span>
+        <!-- Main Content -->
+        <div id="main-content">
+            <!-- Left Panel - Scene Hierarchy -->
+            <div id="left-panel">
+                <div id="left-panel-header">Scene Outliner</div>
+                <div id="scene-hierarchy">
+                    <div class="hierarchy-item selected" onclick="selectHierarchyItem(this, 'scene')">
+                        <span class="hierarchy-icon">🌐</span>
+                        <span>Scene</span>
                     </div>
-                    <input type="range" id="ambientLight" min="0" max="2" step="0.1" value="0.5" 
-                           oninput="renderer.updateAmbientLight(this.value)">
-                </div>
-                
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <label>Directional Light</label>
-                        <span class="range-value" id="directionalValue">1.0</span>
+                    <div class="hierarchy-item" onclick="selectHierarchyItem(this, 'camera')">
+                        <span class="hierarchy-icon">📷</span>
+                        <span>Camera</span>
                     </div>
-                    <input type="range" id="directionalLight" min="0" max="3" step="0.1" value="1.0" 
-                           oninput="renderer.updateDirectionalLight(this.value)">
+                    <div class="hierarchy-item" onclick="selectHierarchyItem(this, 'lights')">
+                        <span class="hierarchy-icon">💡</span>
+                        <span>Lights</span>
+                    </div>
+                    <div class="hierarchy-item" id="current-object-item" onclick="selectHierarchyItem(this, 'object')">
+                        <span class="hierarchy-icon">📦</span>
+                        <span>Cube</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>Material</h2>
-                <div class="control-group">
-                    <label>Object Color</label>
-                    <input type="color" id="objectColor" value="#4a90e2" onchange="renderer.updateObjectColor(this.value)">
+            <!-- Center - Canvas -->
+            <div id="container">
+                <div id="canvas-container">
+                    <canvas id="renderCanvas"></canvas>
+                    <div id="fps-counter">FPS: 60</div>
                 </div>
+            </div>
+
+            <!-- Right Panel - Properties -->
+            <div id="control-panel">
+                <h1>Properties</h1>
+                <p class="subtitle">Modify selected object properties</p>
                 
-                <div class="control-group">
-                    <label>Background Color</label>
-                    <input type="color" id="bgColor" value="#1a1a2e" onchange="renderer.updateBackgroundColor(this.value)">
+                <!-- Objects Accordion -->
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>3D Objects</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card">
+                            <div class="button-grid">
+                                <button onclick="renderer.loadShape('cube')">Cube</button>
+                                <button onclick="renderer.loadShape('sphere')">Sphere</button>
+                                <button onclick="renderer.loadShape('torus')">Torus</button>
+                                <button onclick="renderer.loadShape('cone')">Cone</button>
+                                <button onclick="renderer.loadShape('cylinder')">Cylinder</button>
+                                <button onclick="renderer.loadShape('teapot')">Teapot</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <h2>Animation</h2>
-                <button class="button-full" onclick="renderer.toggleRotation()">Toggle Rotation</button>
-                <button class="button-full" onclick="renderer.toggleWireframe()">Toggle Wireframe</button>
-            </div>
+                <!-- Load Model Accordion -->
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Import Model</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card">
+                            <div class="control-group">
+                                <label>3D Model File</label>
+                                <input type="file" id="modelUpload" accept=".glb,.gltf,.fbx,.obj" onchange="renderer.handleFileUpload(event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Material File (OBJ)</label>
+                                <input type="file" id="mtlUpload" accept=".mtl" onchange="renderer.handleMTLUpload(event)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="card">
-                <h2>Camera</h2>
-                <button class="button-full button-primary" onclick="renderer.resetCamera()">Reset Camera</button>
-                <button class="button-full" onclick="renderer.frameCameraOnObject()">Focus on Model</button>
-            </div>
+                <!-- Material Accordion -->
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Material Properties</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card">
+                            <div class="control-group">
+                                <label>Object Color</label>
+                                <input type="color" id="objectColor" value="#4a90e2" onchange="renderer.updateObjectColor(this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Background Color</label>
+                                <input type="color" id="bgColor" value="#1a1a2e" onchange="renderer.updateBackgroundColor(this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="info-box">
-                <strong>Controls</strong>
-                <ul class="info-list">
-                    <li>Left Mouse: Rotate camera</li>
-                    <li>Right Mouse: Pan camera</li>
-                    <li>Scroll: Zoom in/out</li>
-                    <li>Drag & drop 3D models (GLB/GLTF/FBX/OBJ)</li>
-                    <li>Name texture files with keywords (e.g. "albedo", "normal", "bump") for auto-assignment</li>
-                </ul>
+                <!-- Textures Accordion -->
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Texture Maps</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card">
+                            <div class="control-group">
+                                <label>Bulk Upload (auto-detect)</label>
+                                <input type="file" id="textureUpload" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" multiple onchange="renderer.handleTextureUpload(event)">
+                            </div>
+                            <div class="divider"></div>
+                            <div class="control-group">
+                                <label>Diffuse / Albedo</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('map', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Normal Map</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('normalMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Bump Map</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('bumpMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Emissive</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('emissiveMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Roughness</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('roughnessMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Metalness</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('metalnessMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Ambient Occlusion</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('aoMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Specular</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('specularMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Displacement</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('displacementMap', event)">
+                            </div>
+                            <div class="control-group">
+                                <label>Alpha / Opacity</label>
+                                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('alphaMap', event)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lighting Accordion -->
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Lighting</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card">
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <label>Ambient Light</label>
+                                    <span class="range-value" id="ambientValue">0.5</span>
+                                </div>
+                                <input type="range" id="ambientLight" min="0" max="2" step="0.1" value="0.5" 
+                                       oninput="renderer.updateAmbientLight(this.value)">
+                            </div>
+                            
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <label>Directional Light</label>
+                                    <span class="range-value" id="directionalValue">1.0</span>
+                                </div>
+                                <input type="range" id="directionalLight" min="0" max="3" step="0.1" value="1.0" 
+                                       oninput="renderer.updateDirectionalLight(this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transform Accordion -->
+                <div class="accordion collapsed">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Transform</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card">
+                            <div class="control-group">
+                                <label>Position X: <span id="pos-x">0.00</span></label>
+                                <input type="range" min="-10" max="10" step="0.1" value="0" oninput="updateTransform('position', 'x', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Position Y: <span id="pos-y">0.00</span></label>
+                                <input type="range" min="-10" max="10" step="0.1" value="0" oninput="updateTransform('position', 'y', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Position Z: <span id="pos-z">0.00</span></label>
+                                <input type="range" min="-10" max="10" step="0.1" value="0" oninput="updateTransform('position', 'z', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>Controls</strong>
+                    <ul class="info-list">
+                        <li>Left Mouse: Rotate camera</li>
+                        <li>Right Mouse: Pan camera</li>
+                        <li>Scroll: Zoom in/out</li>
+                        <li>W: Toggle wireframe</li>
+                        <li>F: Reset camera</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Menu functionality
+        function toggleMenu(menuItem) {
+            const wasActive = menuItem.classList.contains('active');
+            
+            // Close all menus
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Toggle current menu
+            if (!wasActive) {
+                menuItem.classList.add('active');
+            }
+        }
+
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-item')) {
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+            }
+        });
+
+        // Menu actions
+        function menuAction(action) {
+            // Close all menus
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            switch(action) {
+                case 'new':
+                    if (confirm('Create new scene? This will clear the current scene.')) {
+                        renderer.loadShape('cube');
+                    }
+                    break;
+                case 'open':
+                    document.getElementById('modelUpload').click();
+                    break;
+                case 'export':
+                    alert('Export functionality coming soon!');
+                    break;
+                case 'undo':
+                    alert('Undo functionality coming soon!');
+                    break;
+                case 'redo':
+                    alert('Redo functionality coming soon!');
+                    break;
+                case 'preferences':
+                    alert('Preferences coming soon!');
+                    break;
+                case 'materialEditor':
+                    alert('Material Editor coming soon!');
+                    break;
+                case 'textureManager':
+                    alert('Texture Manager coming soon!');
+                    break;
+                case 'docs':
+                    window.open('https://github.com/S-T-3-V-3/web-renderer', '_blank', 'noopener,noreferrer');
+                    break;
+                case 'about':
+                    alert('3D Web Renderer v1.0\nProfessional 3D model viewer and editor');
+                    break;
+            }
+        }
+
+        // Accordion functionality
+        function toggleAccordion(header) {
+            const accordion = header.parentElement;
+            accordion.classList.toggle('collapsed');
+        }
+
+        // Scene hierarchy
+        function selectHierarchyItem(item, type) {
+            document.querySelectorAll('.hierarchy-item').forEach(i => {
+                i.classList.remove('selected');
+            });
+            item.classList.add('selected');
+
+            // Update properties panel based on selection
+            const panelTitle = document.querySelector('#control-panel h1');
+            switch(type) {
+                case 'scene':
+                    panelTitle.textContent = 'Scene Properties';
+                    break;
+                case 'camera':
+                    panelTitle.textContent = 'Camera Properties';
+                    break;
+                case 'lights':
+                    panelTitle.textContent = 'Light Properties';
+                    break;
+                case 'object':
+                    panelTitle.textContent = 'Object Properties';
+                    break;
+            }
+        }
+
+        // Transform updates
+        function updateTransform(type, axis, value) {
+            const val = parseFloat(value);
+            document.getElementById(`pos-${axis}`).textContent = val.toFixed(2);
+            
+            if (renderer.currentObject) {
+                renderer.currentObject[type][axis] = val;
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            
+            // Handle F11 separately before the switch because e.key returns 'F11' as a string
+            // which doesn't match the lowercase 'f' case in the switch statement below
+            if (e.key === 'F11') {
+                e.preventDefault();
+                renderer.frameCameraOnObject();
+                return;
+            }
+            
+            switch(e.key.toLowerCase()) {
+                case 'w':
+                    renderer.toggleWireframe();
+                    break;
+                case 'f':
+                    renderer.resetCamera();
+                    break;
+                case 'n':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        menuAction('new');
+                    }
+                    break;
+                case 'o':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        menuAction('open');
+                    }
+                    break;
+            }
+        });
+    </script>
 
     <script type="importmap">
         {
