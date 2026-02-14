@@ -687,7 +687,10 @@ class WebRenderer {
     updateHierarchy(objectName) {
         const item = document.getElementById('current-object-item');
         if (item) {
-            item.querySelector('span:last-child').textContent = objectName;
+            const nameSpan = item.querySelector('span:last-child');
+            if (nameSpan) {
+                nameSpan.textContent = objectName;
+            }
         }
     }
 

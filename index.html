@@ -988,7 +988,7 @@
                     alert('Texture Manager coming soon!');
                     break;
                 case 'docs':
-                    window.open('https://github.com/S-T-3-V-3/web-renderer', '_blank');
+                    window.open('https://github.com/S-T-3-V-3/web-renderer', '_blank', 'noopener,noreferrer');
                     break;
                 case 'about':
                     alert('3D Web Renderer v1.0\nProfessional 3D model viewer and editor');
@@ -1041,7 +1041,8 @@
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
             
-            // Handle F11 separately before the switch
+            // Handle F11 separately before the switch because it needs to be distinguished from 'f'
+            // F11.toLowerCase() would be 'f11', not matching 'f', so we handle it explicitly first
             if (e.key === 'F11') {
                 e.preventDefault();
                 renderer.frameCameraOnObject();
