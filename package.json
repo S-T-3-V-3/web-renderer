@@ -1,0 +1,25 @@
+{
+  "name": "web-renderer",
+  "version": "1.0.0",
+  "description": "3D Web Renderer",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx http-server . -p 8080 -o",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/S-T-3-V-3/web-renderer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/S-T-3-V-3/web-renderer/issues"
+  },
+  "homepage": "https://github.com/S-T-3-V-3/web-renderer#readme",
+  "dependencies": {
+    "three": "^0.182.0"
+  }
+}
