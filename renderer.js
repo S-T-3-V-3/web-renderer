@@ -96,6 +96,9 @@ class WebRenderer {
             this.scene.remove(this.currentObject);
         }
 
+        // Update hierarchy
+        this.updateHierarchy(shapeType.charAt(0).toUpperCase() + shapeType.slice(1));
+
         let geometry;
         switch (shapeType) {
             case 'cube':
@@ -336,6 +339,9 @@ class WebRenderer {
                     this.fitObjectToScene(this.currentObject);
                     this.scene.add(this.currentObject);
 
+                    // Update hierarchy
+                    this.updateHierarchy(file.name.split('.')[0]);
+
                     // Enable shadows
                     this.currentObject.traverse((child) => {
                         if (child.isMesh) {
@@ -414,6 +420,9 @@ class WebRenderer {
                 this.fitObjectToScene(this.currentObject);
                 this.scene.add(this.currentObject);
 
+                // Update hierarchy
+                this.updateHierarchy(file.name.split('.')[0]);
+
                 // Enable shadows and fix materials
                 this.currentObject.traverse((child) => {
                     if (child.isMesh) {
@@ -455,6 +464,9 @@ class WebRenderer {
                 // Center and scale the model
                 this.fitObjectToScene(this.currentObject);
                 this.scene.add(this.currentObject);
+
+                // Update hierarchy
+                this.updateHierarchy(file.name.split('.')[0]);
                 
                 // Enable shadows for all meshes in the model
                 this.currentObject.traverse((child) => {
@@ -670,6 +682,53 @@ class WebRenderer {
             this.frameCount = 0;
             this.lastTime = currentTime;
         }
+    }
+
+    updateHierarchy(objectName) {
+        const item = document.getElementById('current-object-item');
+        if (item) {
+            item.querySelector('span:last-child').textContent = objectName;
+        }
+    }
+
+    handleIndividualTexture(mapType, event) {
+        const file = event.target.files[0];
+        if (!file || !this.currentObject) return;
+
+        const url = URL.createObjectURL(file);
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load(url);
+
+        // Set color space based on map type
+        if (mapType === 'map' || mapType === 'emissiveMap') {
+            texture.colorSpace = THREE.SRGBColorSpace;
+        } else {
+            texture.colorSpace = THREE.LinearSRGBColorSpace;
+        }
+
+        // Apply texture to all materials
+        this.currentObject.traverse((child) => {
+            if (child.isMesh) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach((mat) => {
+                    mat[mapType] = texture;
+                    
+                    // Enable emissive color if emissive map is assigned
+                    if (mapType === 'emissiveMap' && mat.emissive) {
+                        mat.emissive.set(0xffffff);
+                    }
+                    
+                    // Enable transparency if alpha map is assigned
+                    if (mapType === 'alphaMap') {
+                        mat.transparent = true;
+                    }
+                    
+                    mat.needsUpdate = true;
+                });
+            }
+        });
+
+        console.log(`Applied ${mapType} texture: ${file.name}`);
     }
 
     animate() {
