@@ -172,8 +172,12 @@
 
             <div class="control-group">
                 <h2>📁 Load Model</h2>
-                <label>Upload GLB/GLTF file:</label>
-                <input type="file" id="modelUpload" accept=".glb,.gltf" onchange="renderer.handleFileUpload(event)">
+                <label>Upload GLB/GLTF/FBX/OBJ file:</label>
+                <input type="file" id="modelUpload" accept=".glb,.gltf,.fbx,.obj" onchange="renderer.handleFileUpload(event)">
+                <label style="margin-top: 10px;">Upload MTL (for OBJ):</label>
+                <input type="file" id="mtlUpload" accept=".mtl" onchange="renderer.handleMTLUpload(event)">
+                <label style="margin-top: 10px;">Upload Textures (for FBX/OBJ):</label>
+                <input type="file" id="textureUpload" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" multiple onchange="renderer.handleTextureUpload(event)">
             </div>
 
             <div class="control-group">
@@ -212,7 +216,9 @@
                 • Left Mouse: Rotate<br>
                 • Right Mouse: Pan<br>
                 • Scroll: Zoom<br>
-                • Upload 3D models in GLB/GLTF format
+                • Upload 3D models in GLB/GLTF/FBX/OBJ format<br>
+                • Upload MTL + textures for OBJ models<br>
+                • Upload textures separately for FBX models
             </div>
         </div>
     </div>

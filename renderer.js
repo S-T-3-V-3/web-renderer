@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
 class WebRenderer {
     constructor() {
@@ -13,6 +16,11 @@ class WebRenderer {
         this.directionalLight = null;
         this.isRotating = true;
         this.gltfLoader = new GLTFLoader();
+        this.fbxLoader = new FBXLoader();
+        this.objLoader = new OBJLoader();
+        this.mtlLoader = new MTLLoader();
+        this.textureFiles = new Map(); // Store uploaded texture files
+        this.mtlFile = null; // Store uploaded MTL file
         
         // FPS counter
         this.frameCount = 0;
@@ -166,6 +174,210 @@ class WebRenderer {
         const file = event.target.files[0];
         if (!file) return;
 
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'fbx') {
+            this.loadFBXFile(file);
+        } else if (ext === 'obj') {
+            this.loadOBJFile(file);
+        } else {
+            this.loadGLTFFile(file);
+        }
+    }
+
+    handleMTLUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        this.mtlFile = { url, file };
+        console.log(`Loaded MTL file: ${file.name}. Upload an OBJ model to apply.`);
+    }
+
+    handleTextureUpload(event) {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        this.textureFiles.clear();
+
+        for (const file of files) {
+            const url = URL.createObjectURL(file);
+            this.textureFiles.set(file.name.toLowerCase(), { url, file });
+        }
+
+        // If a model is already loaded, apply textures
+        if (this.currentObject) {
+            this.applyUploadedTextures();
+        }
+
+        const count = files.length;
+        console.log(`Loaded ${count} texture file(s). Upload an FBX model or re-upload to apply.`);
+    }
+
+    applyUploadedTextures() {
+        if (!this.currentObject || this.textureFiles.size === 0) return;
+
+        const textureLoader = new THREE.TextureLoader();
+
+        this.currentObject.traverse((child) => {
+            if (child.isMesh) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach((mat) => {
+                    // Try to match texture by material name or map source
+                    if (mat.map && mat.map.sourceFile) {
+                        const texName = mat.map.sourceFile.split('/').pop().split('\\').pop().toLowerCase();
+                        const entry = this.textureFiles.get(texName);
+                        if (entry) {
+                            mat.map = textureLoader.load(entry.url);
+                            mat.map.colorSpace = THREE.SRGBColorSpace;
+                            mat.needsUpdate = true;
+                        }
+                    }
+                    // If only one texture uploaded, apply it as diffuse map
+                    if (this.textureFiles.size === 1 && !mat.map) {
+                        const entry = this.textureFiles.values().next().value;
+                        mat.map = textureLoader.load(entry.url);
+                        mat.map.colorSpace = THREE.SRGBColorSpace;
+                        mat.needsUpdate = true;
+                    }
+                });
+            }
+        });
+    }
+
+    loadOBJFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+
+            const loadObj = (objLoader) => {
+                try {
+                    const object = objLoader.parse(text);
+
+                    // Remove current object
+                    if (this.currentObject) {
+                        this.scene.remove(this.currentObject);
+                    }
+
+                    this.currentObject = object;
+
+                    // Center and scale the model
+                    this.fitObjectToScene(this.currentObject);
+                    this.scene.add(this.currentObject);
+
+                    // Enable shadows
+                    this.currentObject.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            // Apply default material if none
+                            if (!child.material || (child.material.type === 'MeshPhongMaterial' && !child.material.map)) {
+                                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                materials.forEach((mat) => {
+                                    if (mat.map) {
+                                        mat.map.colorSpace = THREE.SRGBColorSpace;
+                                    }
+                                    mat.needsUpdate = true;
+                                });
+                            }
+                        }
+                    });
+
+                    // Apply any pre-uploaded textures
+                    this.applyUploadedTextures();
+
+                } catch (error) {
+                    console.error('Error loading OBJ model:', error);
+                    alert('Error loading OBJ model. Please ensure it\'s a valid OBJ file.');
+                }
+            };
+
+            // If MTL file was uploaded, use it
+            if (this.mtlFile) {
+                const mtlReader = new FileReader();
+                mtlReader.onload = (mtlEvent) => {
+                    const mtlText = mtlEvent.target.result;
+                    const mtlLoader = new MTLLoader();
+
+                    // Create a custom resource path from uploaded textures
+                    const materials = mtlLoader.parse(mtlText, '');
+
+                    // Override texture paths with uploaded texture blob URLs
+                    if (this.textureFiles.size > 0) {
+                        for (const [name, matInfo] of Object.entries(materials.materialsInfo)) {
+                            for (const [key, value] of Object.entries(matInfo)) {
+                                if (typeof value === 'string') {
+                                    const texName = value.split('/').pop().split('\\').pop().toLowerCase();
+                                    const entry = this.textureFiles.get(texName);
+                                    if (entry) {
+                                        matInfo[key] = entry.url;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    materials.preload();
+                    const objLoader = new OBJLoader();
+                    objLoader.setMaterials(materials);
+                    loadObj(objLoader);
+                };
+                mtlReader.readAsText(this.mtlFile.file);
+            } else {
+                loadObj(new OBJLoader());
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    loadFBXFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const arrayBuffer = e.target.result;
+
+            try {
+                const object = this.fbxLoader.parse(arrayBuffer, '');
+
+                // Remove current object
+                if (this.currentObject) {
+                    this.scene.remove(this.currentObject);
+                }
+
+                this.currentObject = object;
+
+                // Center and scale the model
+                this.fitObjectToScene(this.currentObject);
+                this.scene.add(this.currentObject);
+
+                // Enable shadows and fix materials
+                this.currentObject.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+
+                        // Ensure materials render correctly
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach((mat) => {
+                            if (mat.map) {
+                                mat.map.colorSpace = THREE.SRGBColorSpace;
+                            }
+                            mat.needsUpdate = true;
+                        });
+                    }
+                });
+
+                // Apply any pre-uploaded textures
+                this.applyUploadedTextures();
+
+            } catch (error) {
+                console.error('Error loading FBX model:', error);
+                alert('Error loading FBX model. Please ensure it\'s a valid FBX file.');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    loadGLTFFile(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const arrayBuffer = e.target.result;
@@ -178,17 +390,8 @@ class WebRenderer {
 
                 this.currentObject = gltf.scene;
                 
-                // Center the model
-                const box = new THREE.Box3().setFromObject(this.currentObject);
-                const center = box.getCenter(new THREE.Vector3());
-                this.currentObject.position.sub(center);
-                
-                // Scale the model to fit the scene
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 3 / maxDim;
-                this.currentObject.scale.multiplyScalar(scale);
-
+                // Center and scale the model
+                this.fitObjectToScene(this.currentObject);
                 this.scene.add(this.currentObject);
                 
                 // Enable shadows for all meshes in the model
@@ -204,6 +407,19 @@ class WebRenderer {
             });
         };
         reader.readAsArrayBuffer(file);
+    }
+
+    fitObjectToScene(object) {
+        const box = new THREE.Box3().setFromObject(object);
+        const center = box.getCenter(new THREE.Vector3());
+        object.position.sub(center);
+
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+            const scale = 3 / maxDim;
+            object.scale.multiplyScalar(scale);
+        }
     }
 
     updateAmbientLight(value) {
