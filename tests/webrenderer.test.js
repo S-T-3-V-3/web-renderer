@@ -104,6 +104,11 @@ describe('Constructor & Initialization', () => {
     it('12. should initialize mtlFile as null', () => {
         expect(renderer.mtlFile).toBeNull();
     });
+
+    it('12b. should initialize individualTextures as empty Map', () => {
+        expect(renderer.individualTextures).toBeInstanceOf(Map);
+        expect(renderer.individualTextures.size).toBe(0);
+    });
 });
 
 // ── 2.2 Primitive Shape Loading ──────────────────────────────────────
@@ -1137,5 +1142,71 @@ describe('HTML / DOM Integrity', () => {
     it('93. FPS counter element exists', () => {
         const fps = document.getElementById('fps-counter');
         expect(fps).not.toBeNull();
+    });
+});
+
+// ── 2.19 Individual Texture Assignment ───────────────────────────────
+
+describe('Individual Texture Assignment', () => {
+    let renderer;
+
+    beforeEach(() => {
+        renderer = createRenderer();
+    });
+
+    it('94. handleIndividualTexture stores entry in individualTextures map', () => {
+        const mockFile = new File(['data'], 'normal.png', { type: 'image/png' });
+        const event = { target: { files: [mockFile] } };
+        renderer.handleIndividualTexture('normalMap', event);
+        expect(renderer.individualTextures.has('normalMap')).toBe(true);
+        expect(renderer.individualTextures.get('normalMap').file).toBe(mockFile);
+    });
+
+    it('95. handleIndividualTexture does nothing when no file selected', () => {
+        const event = { target: { files: [] } };
+        renderer.handleIndividualTexture('normalMap', event);
+        expect(renderer.individualTextures.size).toBe(0);
+    });
+
+    it('96. handleIndividualTexture calls applySingleTexture when object exists', () => {
+        renderer.loadShape('cube');
+        const spy = vi.spyOn(renderer, 'applySingleTexture');
+        const mockFile = new File(['data'], 'emissive.png', { type: 'image/png' });
+        const event = { target: { files: [mockFile] } };
+        renderer.handleIndividualTexture('emissiveMap', event);
+        expect(spy).toHaveBeenCalledWith('emissiveMap', expect.objectContaining({ file: mockFile }));
+    });
+
+    it('97. applySingleTexture assigns texture to material prop', () => {
+        renderer.loadShape('cube');
+        renderer.currentObject.material.normalMap = null;
+        renderer.applySingleTexture('normalMap', { url: 'blob:mock', file: {} });
+        expect(renderer.currentObject.material.normalMap).not.toBeNull();
+    });
+
+    it('98. applySingleTexture enables emissive when emissiveMap set', () => {
+        renderer.loadShape('cube');
+        renderer.currentObject.material.emissive = new THREE.Color(0x000000);
+        renderer.applySingleTexture('emissiveMap', { url: 'blob:mock', file: {} });
+        expect(renderer.currentObject.material.emissiveMap).not.toBeNull();
+        expect(renderer.currentObject.material.emissive.r).toBe(1);
+    });
+
+    it('99. applySingleTexture enables transparency when alphaMap set', () => {
+        renderer.loadShape('cube');
+        renderer.applySingleTexture('alphaMap', { url: 'blob:mock', file: {} });
+        expect(renderer.currentObject.material.alphaMap).not.toBeNull();
+        expect(renderer.currentObject.material.transparent).toBe(true);
+    });
+
+    it('100. applyUploadedTextures always overwrites existing textures', () => {
+        renderer.loadShape('cube');
+        // Simulate a broken texture from FBX parsing
+        renderer.currentObject.material.map = { broken: true };
+        renderer.textureFiles.set('diffuse.png', { url: 'blob:mock-diffuse', file: {} });
+        renderer.applyUploadedTextures();
+        // The broken texture should have been replaced
+        expect(renderer.currentObject.material.map).not.toEqual({ broken: true });
+        expect(renderer.currentObject.material.map).not.toBeNull();
     });
 });
