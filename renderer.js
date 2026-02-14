@@ -80,7 +80,7 @@ class WebRenderer {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
-        this.controls.screenSpacePanning = false;
+        this.controls.screenSpacePanning = true;
         this.controls.minDistance = 0.01;
         this.controls.maxDistance = 10000;
 
