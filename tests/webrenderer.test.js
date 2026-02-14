@@ -35,10 +35,10 @@ describe('Constructor & Initialization', () => {
 
     it('2. should create a perspective camera at z=5', () => {
         expect(renderer.camera).toBeInstanceOf(THREE.PerspectiveCamera);
-        expect(renderer.camera.position.z).toBe(5);
         expect(renderer.camera.fov).toBe(75);
-        expect(renderer.camera.near).toBeCloseTo(0.1);
-        expect(renderer.camera.far).toBe(1000);
+        // near/far may be adjusted by frameCameraOnObject, but initially set wide
+        expect(renderer.camera.near).toBeLessThan(1);
+        expect(renderer.camera.far).toBeGreaterThan(100);
     });
 
     it('3. should create WebGL renderer with shadows enabled', () => {
@@ -52,10 +52,8 @@ describe('Constructor & Initialization', () => {
         expect(renderer.ambientLight.intensity).toBe(0.5);
     });
 
-    it('5. should set up directional light at position (5,5,5) with shadows', () => {
-        expect(renderer.directionalLight.position.x).toBe(5);
-        expect(renderer.directionalLight.position.y).toBe(5);
-        expect(renderer.directionalLight.position.z).toBe(5);
+    it('5. should set up directional light with shadows', () => {
+        // Light position may be adjusted by frameCameraOnObject
         expect(renderer.directionalLight.castShadow).toBe(true);
         expect(renderer.directionalLight.shadow.mapSize.width).toBe(2048);
         expect(renderer.directionalLight.shadow.mapSize.height).toBe(2048);
@@ -77,8 +75,9 @@ describe('Constructor & Initialization', () => {
         expect(renderer.controls).toBeDefined();
         expect(renderer.controls.enableDamping).toBe(true);
         expect(renderer.controls.dampingFactor).toBeCloseTo(0.05);
-        expect(renderer.controls.minDistance).toBe(1);
-        expect(renderer.controls.maxDistance).toBe(50);
+        // minDistance and maxDistance are dynamically set by frameCameraOnObject
+        expect(renderer.controls.minDistance).toBeGreaterThan(0);
+        expect(renderer.controls.maxDistance).toBeGreaterThan(renderer.controls.minDistance);
     });
 
     it('8. should load default cube on init', () => {
@@ -93,8 +92,8 @@ describe('Constructor & Initialization', () => {
         expect(renderer.mtlLoader).toBeDefined();
     });
 
-    it('10. should initialize rotation as enabled', () => {
-        expect(renderer.isRotating).toBe(true);
+    it('10. should initialize rotation as disabled', () => {
+        expect(renderer.isRotating).toBe(false);
     });
 
     it('11. should initialize textureFiles as empty Map', () => {
@@ -906,11 +905,11 @@ describe('Animation Toggles', () => {
     });
 
     it('72. toggleRotation flips isRotating', () => {
-        expect(renderer.isRotating).toBe(true);
-        renderer.toggleRotation();
         expect(renderer.isRotating).toBe(false);
         renderer.toggleRotation();
         expect(renderer.isRotating).toBe(true);
+        renderer.toggleRotation();
+        expect(renderer.isRotating).toBe(false);
     });
 
     it('73. toggleWireframe toggles wireframe on mesh material', () => {
@@ -946,20 +945,26 @@ describe('Camera Controls - resetCamera()', () => {
         renderer = createRenderer();
     });
 
-    it('76. resetCamera sets position to (0,0,5)', () => {
-        renderer.camera.position.set(10, 10, 10);
+    it('76. resetCamera reframes camera on current object', () => {
+        renderer.camera.position.set(100, 100, 100);
+        renderer.controls.target.set(50, 50, 50);
+        renderer.resetCamera();
+        // Camera should be repositioned near origin (the default cube is centered at ~0)
+        expect(renderer.camera.position.length()).toBeLessThan(20);
+        // Controls target should be near the object center (approximately origin)
+        expect(renderer.controls.target.length()).toBeLessThan(1);
+    });
+
+    it('77. resetCamera sets target to origin when no currentObject', () => {
+        renderer.currentObject = null;
+        renderer.camera.position.set(100, 100, 100);
         renderer.resetCamera();
         expect(renderer.camera.position.x).toBeCloseTo(0, 5);
         expect(renderer.camera.position.y).toBeCloseTo(0, 5);
         expect(renderer.camera.position.z).toBeCloseTo(5, 5);
-    });
-
-    it('77. resetCamera sets controls target to origin', () => {
-        renderer.controls.target.set(5, 5, 5);
-        renderer.resetCamera();
-        expect(renderer.controls.target.x).toBe(0);
-        expect(renderer.controls.target.y).toBe(0);
-        expect(renderer.controls.target.z).toBe(0);
+        expect(renderer.controls.target.x).toBeCloseTo(0, 5);
+        expect(renderer.controls.target.y).toBeCloseTo(0, 5);
+        expect(renderer.controls.target.z).toBeCloseTo(0, 5);
     });
 });
 

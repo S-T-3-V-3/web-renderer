@@ -115,6 +115,12 @@
             font-size: 12px;
         }
 
+        .tex-input {
+            padding: 6px !important;
+            margin-bottom: 4px;
+            font-size: 11px !important;
+        }
+
         .range-value {
             display: inline-block;
             float: right;
@@ -176,8 +182,32 @@
                 <input type="file" id="modelUpload" accept=".glb,.gltf,.fbx,.obj" onchange="renderer.handleFileUpload(event)">
                 <label style="margin-top: 10px;">Upload MTL (for OBJ):</label>
                 <input type="file" id="mtlUpload" accept=".mtl" onchange="renderer.handleMTLUpload(event)">
-                <label style="margin-top: 10px;">Upload Textures (for FBX/OBJ):</label>
+                <label style="margin-top: 10px;">Bulk Upload Textures (auto-detect by name):</label>
                 <input type="file" id="textureUpload" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" multiple onchange="renderer.handleTextureUpload(event)">
+            </div>
+
+            <div class="control-group">
+                <h2>🖼️ Textures</h2>
+                <label>Diffuse / Albedo:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('map', event)">
+                <label>Normal Map:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('normalMap', event)">
+                <label>Bump Map:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('bumpMap', event)">
+                <label>Emissive:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('emissiveMap', event)">
+                <label>Roughness:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('roughnessMap', event)">
+                <label>Metalness:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('metalnessMap', event)">
+                <label>Ambient Occlusion:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('aoMap', event)">
+                <label>Specular:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('specularMap', event)">
+                <label>Displacement:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('displacementMap', event)">
+                <label>Alpha / Opacity:</label>
+                <input type="file" class="tex-input" accept=".png,.jpg,.jpeg,.bmp,.tga,.webp" onchange="renderer.handleIndividualTexture('alphaMap', event)">
             </div>
 
             <div class="control-group">
@@ -209,6 +239,7 @@
             <div class="control-group">
                 <h2>📷 Camera</h2>
                 <button onclick="renderer.resetCamera()">Reset Camera</button>
+                <button onclick="renderer.frameCameraOnObject()">Focus on Model</button>
             </div>
 
             <div class="info-box">
@@ -218,7 +249,8 @@
                 • Scroll: Zoom<br>
                 • Upload 3D models in GLB/GLTF/FBX/OBJ format<br>
                 • Upload MTL + textures for OBJ models<br>
-                • Upload textures separately for FBX models
+                • Supports diffuse, normal, bump, emissive, roughness, metalness, AO, specular, displacement & alpha textures<br>
+                • Name files with keywords (e.g. "albedo", "normal", "bump") for auto-assignment
             </div>
         </div>
     </div>

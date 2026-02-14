@@ -14,7 +14,7 @@ class WebRenderer {
         this.currentObject = null;
         this.ambientLight = null;
         this.directionalLight = null;
-        this.isRotating = true;
+        this.isRotating = false;
         this.gltfLoader = new GLTFLoader();
         this.fbxLoader = new FBXLoader();
         this.objLoader = new OBJLoader();
@@ -40,8 +40,8 @@ class WebRenderer {
         this.camera = new THREE.PerspectiveCamera(
             75,
             canvas.clientWidth / canvas.clientHeight,
-            0.1,
-            1000
+            0.01,
+            10000
         );
         this.camera.position.z = 5;
 
@@ -80,8 +80,8 @@ class WebRenderer {
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
         this.controls.screenSpacePanning = false;
-        this.controls.minDistance = 1;
-        this.controls.maxDistance = 50;
+        this.controls.minDistance = 0.01;
+        this.controls.maxDistance = 10000;
 
         // Load default shape
         this.loadShape('cube');
@@ -154,6 +154,7 @@ class WebRenderer {
                 
                 this.currentObject = group;
                 this.scene.add(this.currentObject);
+                this.frameCameraOnObject();
                 return;
         }
 
@@ -168,6 +169,7 @@ class WebRenderer {
         this.currentObject.castShadow = true;
         this.currentObject.receiveShadow = true;
         this.scene.add(this.currentObject);
+        this.frameCameraOnObject();
     }
 
     handleFileUpload(event) {
@@ -219,27 +221,96 @@ class WebRenderer {
 
         const textureLoader = new THREE.TextureLoader();
 
+        // Map of material property names to common filename patterns
+        const textureMapTypes = [
+            { prop: 'map',              patterns: ['diffuse', 'albedo', 'basecolor', 'base_color', 'color', 'diff'] },
+            { prop: 'normalMap',        patterns: ['normal', 'nrm', 'norm', 'nmap'] },
+            { prop: 'bumpMap',          patterns: ['bump', 'height', 'disp_bump'] },
+            { prop: 'emissiveMap',      patterns: ['emissive', 'emission', 'emit', 'glow', 'self_illum'] },
+            { prop: 'roughnessMap',     patterns: ['roughness', 'rough', 'rgh'] },
+            { prop: 'metalnessMap',     patterns: ['metalness', 'metallic', 'metal', 'met'] },
+            { prop: 'aoMap',            patterns: ['ao', 'ambient_occlusion', 'ambientocclusion', 'occlusion'] },
+            { prop: 'specularMap',      patterns: ['specular', 'spec', 'refl'] },
+            { prop: 'displacementMap',  patterns: ['displacement', 'displace', 'heightmap'] },
+            { prop: 'alphaMap',         patterns: ['alpha', 'opacity', 'transparent', 'transparency'] },
+        ];
+
+        // Determine which texture file best matches each map type by filename
+        const assignments = new Map(); // prop -> { url, file }
+        const usedFiles = new Set();
+
+        for (const { prop, patterns } of textureMapTypes) {
+            for (const [fileName, entry] of this.textureFiles) {
+                const lower = fileName.toLowerCase();
+                if (patterns.some(p => lower.includes(p))) {
+                    assignments.set(prop, entry);
+                    usedFiles.add(fileName);
+                    break;
+                }
+            }
+        }
+
+        // If there are unassigned texture files and no diffuse was matched,
+        // assign the first unmatched file as diffuse
+        if (!assignments.has('map')) {
+            for (const [fileName, entry] of this.textureFiles) {
+                if (!usedFiles.has(fileName)) {
+                    assignments.set('map', entry);
+                    usedFiles.add(fileName);
+                    break;
+                }
+            }
+        }
+
+        // If only one texture and no pattern matched, use it as diffuse
+        if (this.textureFiles.size === 1 && assignments.size === 0) {
+            const entry = this.textureFiles.values().next().value;
+            assignments.set('map', entry);
+        }
+
         this.currentObject.traverse((child) => {
             if (child.isMesh) {
                 const materials = Array.isArray(child.material) ? child.material : [child.material];
                 materials.forEach((mat) => {
-                    // Try to match texture by material name or map source
-                    if (mat.map && mat.map.sourceFile) {
-                        const texName = mat.map.sourceFile.split('/').pop().split('\\').pop().toLowerCase();
-                        const entry = this.textureFiles.get(texName);
-                        if (entry) {
-                            mat.map = textureLoader.load(entry.url);
-                            mat.map.colorSpace = THREE.SRGBColorSpace;
-                            mat.needsUpdate = true;
+                    // First, try to replace existing texture maps by matching their source filenames
+                    const mapProps = ['map', 'normalMap', 'bumpMap', 'emissiveMap', 'roughnessMap',
+                                     'metalnessMap', 'aoMap', 'specularMap', 'displacementMap', 'alphaMap'];
+                    for (const prop of mapProps) {
+                        if (mat[prop] && mat[prop].sourceFile) {
+                            const texName = mat[prop].sourceFile.split('/').pop().split('\\').pop().toLowerCase();
+                            const entry = this.textureFiles.get(texName);
+                            if (entry) {
+                                const tex = textureLoader.load(entry.url);
+                                // Only diffuse/emissive maps use SRGB; others are linear data
+                                if (prop === 'map' || prop === 'emissiveMap') {
+                                    tex.colorSpace = THREE.SRGBColorSpace;
+                                } else {
+                                    tex.colorSpace = THREE.LinearSRGBColorSpace;
+                                }
+                                mat[prop] = tex;
+                            }
                         }
                     }
-                    // If only one texture uploaded, apply it as diffuse map
-                    if (this.textureFiles.size === 1 && !mat.map) {
-                        const entry = this.textureFiles.values().next().value;
-                        mat.map = textureLoader.load(entry.url);
-                        mat.map.colorSpace = THREE.SRGBColorSpace;
-                        mat.needsUpdate = true;
+
+                    // Then apply pattern-matched textures for any maps not already set
+                    for (const [prop, entry] of assignments) {
+                        if (!mat[prop]) {
+                            const tex = textureLoader.load(entry.url);
+                            if (prop === 'map' || prop === 'emissiveMap') {
+                                tex.colorSpace = THREE.SRGBColorSpace;
+                            } else {
+                                tex.colorSpace = THREE.LinearSRGBColorSpace;
+                            }
+                            mat[prop] = tex;
+
+                            // Enable emissive color if emissive map is assigned
+                            if (prop === 'emissiveMap' && mat.emissive) {
+                                mat.emissive.set(0xffffff);
+                            }
+                        }
                     }
+
+                    mat.needsUpdate = true;
                 });
             }
         });
@@ -270,16 +341,10 @@ class WebRenderer {
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            // Apply default material if none
-                            if (!child.material || (child.material.type === 'MeshPhongMaterial' && !child.material.map)) {
-                                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                                materials.forEach((mat) => {
-                                    if (mat.map) {
-                                        mat.map.colorSpace = THREE.SRGBColorSpace;
-                                    }
-                                    mat.needsUpdate = true;
-                                });
-                            }
+                            const materials = Array.isArray(child.material) ? child.material : [child.material];
+                            materials.forEach((mat) => {
+                                this.fixMaterialTextures(mat);
+                            });
                         }
                     });
 
@@ -355,13 +420,10 @@ class WebRenderer {
                         child.castShadow = true;
                         child.receiveShadow = true;
 
-                        // Ensure materials render correctly
+                        // Fix colorSpace on all texture maps
                         const materials = Array.isArray(child.material) ? child.material : [child.material];
                         materials.forEach((mat) => {
-                            if (mat.map) {
-                                mat.map.colorSpace = THREE.SRGBColorSpace;
-                            }
-                            mat.needsUpdate = true;
+                            this.fixMaterialTextures(mat);
                         });
                     }
                 });
@@ -399,6 +461,10 @@ class WebRenderer {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach((mat) => {
+                            this.fixMaterialTextures(mat);
+                        });
                     }
                 });
             }, (error) => {
@@ -410,16 +476,121 @@ class WebRenderer {
     }
 
     fitObjectToScene(object) {
-        const box = new THREE.Box3().setFromObject(object);
-        const center = box.getCenter(new THREE.Vector3());
-        object.position.sub(center);
+        // Force world matrix update so bounding box is accurate
+        object.updateMatrixWorld(true);
 
+        const box = new THREE.Box3().setFromObject(object);
+
+        // Guard against empty/degenerate bounding boxes
+        if (box.isEmpty()) return;
+
+        const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
+
+        // Normalize: move object so its center is at origin, scale to target size
+        const targetSize = 3;
         if (maxDim > 0) {
-            const scale = 3 / maxDim;
+            const scale = targetSize / maxDim;
             object.scale.multiplyScalar(scale);
         }
+
+        // Re-compute after scaling
+        object.updateMatrixWorld(true);
+        const scaledBox = new THREE.Box3().setFromObject(object);
+        const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+
+        // Move the object so its bounding box center sits at origin
+        object.position.sub(scaledCenter);
+
+        // Now frame the camera to look at the centered object
+        this.frameCameraOnObject();
+    }
+
+    frameCameraOnObject() {
+        if (!this.currentObject) return;
+
+        this.currentObject.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(this.currentObject);
+        if (box.isEmpty()) return;
+
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+
+        // Calculate ideal camera distance using FOV
+        const fov = this.camera.fov * (Math.PI / 180);
+        let cameraDistance = (maxDim / 2) / Math.tan(fov / 2);
+        cameraDistance *= 1.5; // Padding so the model isn't edge-to-edge
+
+        // Position camera at a slight angle for better 3D perception
+        this.camera.position.set(
+            center.x + cameraDistance * 0.3,
+            center.y + cameraDistance * 0.3,
+            center.z + cameraDistance
+        );
+
+        // Point orbit controls and camera at the object center
+        this.controls.target.copy(center);
+        this.camera.lookAt(center);
+
+        // Adapt near/far clipping planes to the model scale
+        const dist = this.camera.position.distanceTo(center);
+        this.camera.near = Math.max(0.001, dist * 0.001);
+        this.camera.far = Math.max(1000, dist * 100);
+        this.camera.updateProjectionMatrix();
+
+        // Adapt orbit limits
+        this.controls.minDistance = maxDim * 0.05;
+        this.controls.maxDistance = maxDim * 50;
+
+        // Reposition directional light relative to model scale
+        const lightOffset = maxDim * 2;
+        this.directionalLight.position.set(lightOffset, lightOffset, lightOffset);
+        this.directionalLight.shadow.camera.near = 0.01;
+        this.directionalLight.shadow.camera.far = lightOffset * 10;
+        this.directionalLight.shadow.camera.left = -maxDim * 2;
+        this.directionalLight.shadow.camera.right = maxDim * 2;
+        this.directionalLight.shadow.camera.top = maxDim * 2;
+        this.directionalLight.shadow.camera.bottom = -maxDim * 2;
+        this.directionalLight.shadow.camera.updateProjectionMatrix();
+
+        this.controls.update();
+    }
+
+    fixMaterialTextures(mat) {
+        // Map properties that store color data (sRGB)
+        const srgbMaps = ['map', 'emissiveMap'];
+        // Map properties that store linear data (normals, roughness, etc.)
+        const linearMaps = ['normalMap', 'bumpMap', 'roughnessMap', 'metalnessMap',
+                            'aoMap', 'specularMap', 'displacementMap', 'alphaMap'];
+
+        for (const prop of srgbMaps) {
+            if (mat[prop]) {
+                mat[prop].colorSpace = THREE.SRGBColorSpace;
+            }
+        }
+
+        for (const prop of linearMaps) {
+            if (mat[prop]) {
+                mat[prop].colorSpace = THREE.LinearSRGBColorSpace;
+            }
+        }
+
+        // Enable emissive if emissive map exists
+        if (mat.emissiveMap && mat.emissive) {
+            if (mat.emissive.r === 0 && mat.emissive.g === 0 && mat.emissive.b === 0) {
+                mat.emissive.set(0xffffff);
+            }
+            mat.emissiveIntensity = mat.emissiveIntensity || 1;
+        }
+
+        // If material has alpha map, enable transparency
+        if (mat.alphaMap) {
+            mat.transparent = true;
+        }
+
+        mat.needsUpdate = true;
     }
 
     updateAmbientLight(value) {
@@ -470,9 +641,15 @@ class WebRenderer {
     }
 
     resetCamera() {
-        this.camera.position.set(0, 0, 5);
-        this.controls.target.set(0, 0, 0);
-        this.controls.update();
+        if (this.currentObject) {
+            this.frameCameraOnObject();
+        } else {
+            this.camera.position.set(0, 0, 5);
+            this.controls.target.set(0, 0, 0);
+            this.camera.lookAt(0, 0, 0);
+            this.camera.updateProjectionMatrix();
+            this.controls.update();
+        }
     }
 
     onWindowResize() {
